@@ -1,14 +1,12 @@
 <?php
-
 namespace Templates;
-
 use Templates\BaseTemplate;
-
-class ProductTemplate extends BaseTemplate {
-    public function getTemplate(array $arr): string 
+class ProductTemplate extends BaseTemplate
+{
+    public function getTemplate(array $arr): string
     {
         $template = parent::getBaseTemplate();
-        $str= '';
+        $str = '';
         session_start();
         if (isset($_SESSION['flash'])) {
             $str .= <<<END
@@ -16,21 +14,20 @@ class ProductTemplate extends BaseTemplate {
                     <div>{$_SESSION['flash']}</div>
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"
                     onclick="this.parentNode.style.display='none';"></button>
+                    </div>
                     <script>
                     setTimeout(
                         function() {
-                          var elem = document.getElementById("liveAlertBtn");
-                          elem.style.display = "none";
+                        var elem = document.getElementById("liveAlertBtn");
+                        elem.style.display = "none";
                         }, 3000
-                      );
-                    </script>
-                </div>
+                    );
+            </script>
             END;
             unset($_SESSION['flash']);
         }
-
-        foreach( $arr as $key => $item ) {
-            $element_template= <<<END
+        foreach ($arr as $item) {
+            $element_template = <<<END
             <div class="row mb-5">
                 <div class="col-6">
                     <img src="%s" class="w-100">
@@ -40,34 +37,33 @@ class ProductTemplate extends BaseTemplate {
                         <h2>%s</h2>
                         <p>%s</p>
                         <p>%s</p>
-                        <h2>%d ₽</h2>
-                        <form method="POST" action="/basket">
+                        <h2>От %d ₽</h2>
+                        <form action="/basket" method="POST">
                         <input type="hidden" name="id" value="%s">
-                        <button type="submit" class="btn btn-primary" >Добавить в корзину</button>
+                        <button type="submit" class="btn btn-primary mt-3">Забронировать</button>
                         </form>
                     </div>
                 </div>
             </div>
             END;
 
-            $str.= sprintf(
-                    $element_template, 
-                    'https://localhost/'.$item['image'],
-                    $item['name'],
-                    $item['description'],
-                    $item['weigth'],
-                    $item['price'],
-                    $item['id']
-                );
+            $str .= sprintf(
+                $element_template,
+                'https://localhost/' . $item['image'],
+                $item['name'],
+                $item['description'],
+                $item['weigth'],
+                $item['price'],
+                $item['id']
+            );
         }
-        $resultTemplate = sprintf($template, 'Список товаров', $str);
-        return $resultTemplate;
+        return sprintf($template, 'Список товаров', $str);
     }
-
-    public function getPageTemplate(array $arr): string 
+    public function getPageTemplate(array $arr): string
     {
         $template = parent::getBaseTemplate();
-        $element_template= <<<END
+
+        $element_template = <<<END
         <div class="row mb-5">
             <div class="col-6">
                 <img src="%s" class="w-100">
@@ -77,22 +73,27 @@ class ProductTemplate extends BaseTemplate {
                     <h2>%s</h2>
                     <p>%s</p>
                     <p>%s</p>
-                    <h2>%d ₽</h2>
+                    <h2>От %d ₽</h2>
+                    <form action="/basket" method="POST">
+                    <input type="hidden" name="id" value="%s">
+                    <button type="submit">Добавить в корзину</button>
+                    </form>
                 </div>
             </div>
         </div>
         END;
 
-        $str= sprintf(
-            $element_template, 
-            'https://localhost/'.$arr['image'],
+        $str = sprintf(
+            $element_template,
+            'https://localhost/' . $arr['image'],
             $arr['name'],
             $arr['description'],
             $arr['weigth'],
-            $arr['price']
-        );      
+            $arr['price'],
+            $arr['id']
+        );
 
-        $resultTemplate =  sprintf($template, 'Страница товара', $str);
+        $resultTemplate = sprintf($template, 'Страница товара', $str);
         return $resultTemplate;
     }
 }

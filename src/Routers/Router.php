@@ -1,30 +1,27 @@
 <?php
-
-namespace Routers;  
-
-use Controllers\Product;
-use Controllers\Order;
-use Controllers\Home;
+namespace Routers;
 use Controllers\Basket;
-
-class Router {
-    public function route(string $url):string 
+use Controllers\Home;
+use Controllers\Order;
+use Controllers\Product;
+class Router
+{
+    public function route(string $url): string
     {
-        $path = parse_url($url, PHP_URL_PATH);  
-        //     /products/12
+        $path = parse_url($url, PHP_URL_PATH);
 
-        $pieces = explode("/", $path);          
-        // [0]- пусто, [1]- products, [2]- 12
-        
+        $pieces = explode("/", $path);
+
         $id = 0;
-        // Идентификатор найден
         if (isset($pieces[2]) && !empty($pieces[2])) {
-            $id = intval($pieces[2]);
+            $id = $pieces[2];
         }
 
         $method = $_SERVER['REQUEST_METHOD'];
+
         $resource = $pieces[1];
         $html_result = "";
+
         switch ($resource) {
             case "products":
                 $product = new Product();
@@ -40,22 +37,21 @@ class Router {
                 else
                     $html_result = $order->get();
                 break;
-            default:
-            $home = new Home();
-            $html_result = $home->get();
-                break;
             case "basket":
                 $basket = new Basket();
                 if ($method == "POST")
                     $html_result = $basket->add();
-                break;   
+                break;
             case "basket_clear":
                 $basket = new Basket();
                 if ($method == "POST")
                     $html_result = $basket->clear();
-                break;   
+                break;
+            default:
+                $home = new Home();
+                $html_result = $home->get();
+                break;
         }
-        
         return $html_result;
     }
 }

@@ -1,6 +1,5 @@
 <?php
-
-namespace Interfaces;  
+namespace Interfaces;
 interface FileStorageInterface
 {
     public function saveData($nameFile, $arr);
