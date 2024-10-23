@@ -1,156 +1,22 @@
 <?php
+
 namespace Controllers;
+
 use Services\FileStorage;
 use Templates\OrderTemplate;
+use Services\OrderDBStorage;
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
-class Order
-{
-    public function create(): string
-    {
-        $objStorage = new FileStorage();
 
-        $arr = [];
-        $arr['name'] = urldecode($_POST['name']);
-        $arr['address'] = urldecode($_POST['address']);
-        $arr['number'] = $_POST['number'];
-        $arr['created_at'] = date("d-m-Y H:i:s");
+class Order {
 
-        $products = $objStorage->loadData('data.json');
-        session_start();
-        $all_sum = 0;
-        $items = [];
-        foreach ($products as $product) {
-            $id = $product['id'];
-            if (array_key_exists($id, $_SESSION['basket'])) {
-                $item = [];
-                $item['name'] = urldecode($product['name']);
-                $item['quantity'] = $_SESSION['basket'][$id]['quantity'];
-                $item['price'] = $product['price'];
-                $item['sum'] = $item['price'] * $item['quantity'];
-                $all_sum += $item['sum'];
-                array_push($items, $item);
-            }
-        }
-        $arr['all_sum'] = $all_sum;
-        $arr['products'] = $items;
-
-        $objStorage->saveData('orders.json', $arr);
-        $this->sendMail($_POST['email']);
-        
-        $_SESSION['flash'] = "Заказ успешно создан и передан в службу доставки.";
-        $_SESSION['basket'] = [];
-        header('Location: /');
-        return '';
-    }
-    public function get(): string
-    {
-        session_start();
-
-        if (!isset($_SESSION['basket'])) {
-            $_SESSION['basket'] = [];
-        }
-
-        $objStorage = new FileStorage();
-        $products = $objStorage->loadData('data.json');
-
-        $all_sum = 0;
-        $str_list = '<h1>Создание заказа</h1>';
-        foreach ($products as $product) {
-            $id = $product['id'];
-            if (array_key_exists($id, $_SESSION['basket'])) {
-                $quantity = $_SESSION['basket'][$id]['quantity'];
-                $name = $product['name'];
-                $price = $product['price'];
-
-                $sum = $price * $quantity;
-                $all_sum += $sum;
-                $str_list .= <<<LINE
-                <div class="row mt-3">
-                    <div class="col-6">
-                    {$name}
-                    </div>
-                    <div class="col-2">
-                    {$quantity} ед.
-                    </div>
-                    <div class="col-2">
-                    {$sum} ₽
-                    </div>
-                </div>
-                LINE;
-
-            }
-        }
-        if ($all_sum === 0) {
-            $str_list .= <<<LINE
-            <div class="row">
-            <div class="col-12">
-            нет добавленных товаров
-            </div>
-            </div>
-            LINE;
-        } else {
-            $str_list .= <<<LINE
-            <div class="row">
-                <div class="col-6">
-                <hr>
-                Общая сумма заказа:
-                </div>
-                <div class="col-2">
-                <hr>
-                &nbsp;
-                </div>
-                <div class="col-2">
-                <hr>
-                {$all_sum} ₽
-                </div>
-                </div>
-                <div class="row">
-                <div class="col-6">
-                &nbsp;
-                </div>
-                <div class="col-6">
-                <form action="/basket_clear" method="POST">
-                <button type="submit" class="btn btn-primary mt-3">Очистить корзину</button>
-                </form>
-                </div>
-            </div>
-            LINE;
-        
-            $str_list .= <<<LINE
-            <div class="row">
-                <div class="col-6">
-                <form action="/orders" method="POST">
-
-                <label for="name">Ваше ФИО:</label><br>
-                <input type="text" id="name" name="name" class="form-control" required><br>
-
-                <label for="address">Адрес доставки:</label><br>
-                <input type="text" id="address" name="address" class="form-control" required><br>
-
-                <label for="number">Телефон:</label><br>
-                <input type="text" id="number" name="number" class="form-control" required><br>
-
-                <label for="email">Email:</label><br>
-                <input type="email" id="email" class="form-control" name="email" required><br>
-
-                <button type="submit" class="btn btn-primary">Создать заказ</button>
-                </div>
-            </div>
-            LINE;
-        }
-        $objTemplate = new OrderTemplate();
-        $template = $objTemplate->getTemplate($str_list);
-
-        return $template;
-    }
     public function sendMail($email) {
         $mail = new PHPMailer();
         if (isset($email) && !empty($email)) {
             try {
                 $mail->SMTPDebug = 2;
                 $mail->CharSet = 'UTF-8';
-                $mail->SetFrom("v.milevskiy@coopteh.ru","Burger krig");
+                $mail->SetFrom("v.milevskiy@coopteh.ru","Суши Таун");
                 $mail->addAddress($email);
                 $mail->isHTML(true);
                 $mail->isSMTP();                                            //Send using SMTP
@@ -160,8 +26,8 @@ class Order
                 $mail->Password   = 'hF8xTWxXyKcCnEg1n9Wz';
                 $mail->Port       = 465;
                 $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;            //Enable implicit TLS encryption
-                $mail->Subject = 'Заявка с сайта: Burger Krig';
-                $mail->Body = 'Информационное сообщение c сайта Burger Krig <br><br>
+                $mail->Subject = 'Заявка с сайта: Суши Таун';
+                $mail->Body = 'Информационное сообщение c сайта Суши Таун <br><br>
                 ------------------------------------------<br>
                 <br>
                 Спасибо!<br>
@@ -180,5 +46,121 @@ class Order
             }
         }    
         return false;
+    }
+    public function get(): string
+    {
+        session_start();
+
+        if (!isset($_SESSION['basket'])) {
+            $_SESSION['basket'] = [];
+        }
+
+        $objStorage = new FileStorage();
+        $products = $objStorage->loadData('data.json');
+
+        $all_sum = 0;
+        $str_list = '<h1>Создание заказа</h1><br><br>';
+        foreach ($products as $product) {
+            $id = $product['id'];
+            if (array_key_exists($id, $_SESSION['basket'])) {
+                $quantity = $_SESSION['basket'][$id]['quantity'];
+                $name = $product['name'];
+                $price = $product['price'];
+                $sum = $price * $quantity;
+                $all_sum += $sum;
+                $str_list .= <<<LINE
+                <div class="row"><br><br>
+                    <div class="col-6">
+                    <h3>{$name}<h3>
+                    </div>
+                    <div class="col-2">
+                    <h3>{$quantity}</h3>
+                    </div>
+                    <div class="col-1">
+                    <h3>{$sum}<h3>
+                    </div>
+                </div>
+                LINE;
+            }
+        }
+
+        $str_list .= <<<LINE
+        <div>
+                <div class="col-6">
+                <h2>Общая стоимость: {$all_sum}<h2>
+                </div>
+                <form method="POST" action="/basket_clear">
+                <button type="submit" class="btn btn-primary">Очистить корзину</button><br><br>
+                </form>
+        </div>
+        LINE;
+
+        $str_list .= <<<LINE
+        <div class="row">
+            <div class="col-12">
+                <form action="/orders" method="POST"><br><br>
+                <label for="name" id="name">Ваше Имя:</label>
+                <input type="text" id="name" name="name" class="form-control form-control-lg" required>
+                <label for="address" id="name">Адрес доставки:</label>
+                <input type="text" id="address" name="address" class="form-control form-control-lg" required
+                <label for="number" id="name">Телефон:</label><br>
+                <input type="text" id="number" name="number" class="form-control form-control-lg" required>
+                <label for="email">Email:</label>
+                <input type="email" id="email" class="form-control" name="email" required>
+                <button type="submit" class="btn btn-secondary">Создать заказ</button>
+            </div>
+        </div>
+        LINE;
+
+        $objTemplate = new OrderTemplate();
+        $template = $objTemplate->getTemplate( $str_list );
+        
+
+
+        return $template;
+
+    }
+
+    public function create(): string {
+        
+        $objStorage = new FileStorage();
+
+        $arr = [];
+        $arr['name'] = urldecode( $_POST['name'] );
+        $arr['address'] = urldecode( $_POST['address'] );
+        $arr['number'] = $_POST['number'];
+        $arr['created_at'] = date("d-m-Y H:i:s");
+
+        $products = $objStorage->loadData('data.json');
+        session_start();
+        $all_sum = 0;
+        $items = [];
+        foreach ($products as $product) {
+            $id = $product['id'];
+            if (array_key_exists($id, $_SESSION['basket'])) {
+                $item = [];
+                $item['name'] = urldecode( $product['name'] );
+                $item['quantity'] = $_SESSION['basket'][$id]['quantity'];                
+                $item['price'] = $product['price'];
+                $item['sum'] = $item['price'] * $item['quantity'];
+                $all_sum += $item['sum'];
+                array_push($items, $item);
+            }
+        }
+        $arr['all_sum'] = $all_sum;
+        $arr['products'] = $items;
+
+        $objStorage->saveData('orders.json', $arr);
+        // отправка емайл
+        $this->sendMail($_POST['email']);
+        
+        $_SESSION['basket'] = [];
+        header('Location: https://localhost/orders');
+
+        $_SESSION['flash'] = 'Заказ успешно создан и передан в службу доставки';
+        header('Location: /');
+        return '';
+
+    
     }
 }
