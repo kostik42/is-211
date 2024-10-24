@@ -18,7 +18,6 @@ class Router
         }
 
         $method = $_SERVER['REQUEST_METHOD'];
-
         $resource = $pieces[1];
         $html_result = "";
 

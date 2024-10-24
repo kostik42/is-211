@@ -7,7 +7,6 @@ class ProductTemplate extends BaseTemplate
     {
         $template = parent::getBaseTemplate();
         $str = '';
-        session_start();
         if (isset($_SESSION['flash'])) {
             $str .= <<<END
                 <div id="liveAlertBtn" class="alert alert-success alert-dismissible" role="alert">

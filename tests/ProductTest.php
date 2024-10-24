@@ -4,7 +4,7 @@ namespace Test;
 use PHPUnit\Framework\TestCase;
 use Routers\Router;
 
-class ProductsTest extends TestCase {
+class ProductTest extends TestCase {
     public function test_router() {
         $product = new Router();
         $html = $product->route( "http://localhost/products" );
