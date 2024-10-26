@@ -8,7 +8,7 @@ class ProductTest extends TestCase {
     public function test_router() {
         $product = new Router();
         $html = $product->route( "http://localhost/products" );
-        $pos= mb_strpos($html, "Каталог");
+        $pos= mb_strpos($html, "Каталог1");
         $this->assertNotEquals(false, $pos);
     }
 }
